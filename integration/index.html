@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <!-- ボタンを追加 -->
+    <button onclick="createUser()">Create User</button>
+
+    <script>
+      async function createUser() {
+        const response = await fetch("http://localhost:3000/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name: "John", age: 25 }),
+        });
+
+        if (!response.ok) {
+          const message = await response.text();
+          throw new Error(`An error has occurred: ${message}`);
+        }
+
+        const user = await response.json();
+
+        console.log(user);
+      }
+    </script>
+  </body>
+</html>
