@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>TODOアプリ</title>
+    <style>
+      /* ここにCSSを書く */
+    </style>
+  </head>
+  <body>
+    <h1>TODOアプリ</h1>
+    <input id="todo-input" type="text" placeholder="新しいTODOを入力" />
+    <button id="add-todo">追加</button>
+    <ul id="todo-list"></ul>
+    <template id="todo-item-template">
+      <li>
+        <span class="todo-text"></span>
+        <button class="delete-todo">削除</button>
+        <button class="update-todo">完了</button>
+      </li>
+    </template>
+    <script>
+      const todoInput = document.querySelector("#todo-input");
+      const addTodoButton = document.querySelector("#add-todo");
+      const todoList = document.querySelector("#todo-list");
+      const todoItemTemplate = document.querySelector("#todo-item-template");
+
+      // すべてのTODOを取得し、画面に表示する
+      function fetchTodos() {
+        fetch("http://localhost:3000/todos")
+          .then((response) => response.json())
+          .then((todos) => {
+            todoList.innerHTML = "";
+            todos.forEach((todo) => {
+              const todoItem = todoItemTemplate.content.cloneNode(true);
+              const textElement = todoItem.querySelector(".todo-text");
+              const deleteButton = todoItem.querySelector(".delete-todo");
+              const updateButton = todoItem.querySelector(".update-todo");
+
+              textElement.textContent = todo.text;
+              updateButton.textContent = todo.completed ? "未完了" : "完了";
+
+              deleteButton.addEventListener("click", (event) => {
+                event.stopPropagation();
+                deleteTodo(todo);
+              });
+
+              updateButton.addEventListener("click", (event) => {
+                event.stopPropagation();
+                updateTodo(todo);
+              });
+
+              todoList.appendChild(todoItem);
+            });
+          });
+      }
+
+      // 新しいTODOを作成する
+      function addTodo() {
+        const newTodo = { text: todoInput.value, completed: false };
+        fetch("http://localhost:3000/todos", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(newTodo),
+        }).then(() => {
+          fetchTodos();
+          todoInput.value = "";
+        });
+      }
+
+      // TODOを更新する
+      function updateTodo(todo) {
+        todo.completed = !todo.completed;
+        fetch(`http://localhost:3000/todos/${todo.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(todo),
+        }).then(fetchTodos);
+      }
+
+      // TODOを削除する
+      function deleteTodo(todo) {
+        fetch(`http://localhost:3000/todos/${todo.id}`, {
+          method: "DELETE",
+        }).then(fetchTodos);
+      }
+
+      addTodoButton.addEventListener("click", addTodo);
+      fetchTodos();
+    </script>
+  </body>
+</html>
